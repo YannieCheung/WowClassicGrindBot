@@ -224,21 +224,25 @@ public static class DependencyInjection
     }
 
 
-    public static bool AddWoWProcess(
-        this IServiceCollection services, ILogger log)
+    public static IServiceCollection AddWoWProcess(this IServiceCollection services)
     {
         services.AddSingleton<CancellationTokenSource>();
         services.AddSingleton<WowProcess>();
         services.AddSingleton<AddonConfigurator>();
+        services.AddSingleton<Version>(sp =>
+        {
+            var wowProcess = sp.GetRequiredService<WowProcess>();
+            return wowProcess.FileVersion;
+        });
 
-        var sp = services.BuildServiceProvider(
-            new ServiceProviderOptions { ValidateOnBuild = true });
+        return services;
+    }
 
-        WowProcess process = sp.GetRequiredService<WowProcess>();
+    public static bool ValidateAndCleanConfig(this IServiceProvider sp, ILogger log)
+    {
+        var process = sp.GetRequiredService<WowProcess>();
         log.LogInformation($"Pid: {process.Id}");
         log.LogInformation($"Version: {process.FileVersion}");
-
-        services.AddSingleton<Version>(x => process.FileVersion);
 
         AddonConfigurator configurator = sp.GetRequiredService<AddonConfigurator>();
         Version? installVersion = configurator.GetInstallVersion();

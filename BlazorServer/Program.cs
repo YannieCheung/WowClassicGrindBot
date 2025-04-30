@@ -38,6 +38,8 @@ public static class Program
                     logger.LogError(e, e.Message);
                 };
 
+                host.Services.ValidateAndCleanConfig(logger);
+
                 host.Run();
             }
             catch (Exception ex)
@@ -97,7 +99,7 @@ public static class Program
 
         services.AddStartupConfigurations(configuration);
 
-        services.AddWoWProcess(log);
+        services.AddWoWProcess();
 
         services.AddCoreBase();
 
@@ -114,8 +116,8 @@ public static class Program
 
         services.AddCoreFrontend();
 
-        services.BuildServiceProvider(
-            new ServiceProviderOptions { ValidateOnBuild = true });
+        //services.BuildServiceProvider(
+        //    new ServiceProviderOptions { ValidateOnBuild = true });
     }
 
     private static WebApplication ConfigureApp(WebApplicationBuilder builder, IWebHostEnvironment env)

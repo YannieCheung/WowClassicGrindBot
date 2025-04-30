@@ -89,10 +89,7 @@ public sealed class Program
             goto Exit;
         }
 
-        if (!ConfigureServices(log, services))
-        {
-            goto Exit;
-        }
+        ConfigureServices(log, services);
 
         ServiceProvider provider = services
             .AddSingleton<HeadlessServer>()
@@ -100,6 +97,12 @@ public sealed class Program
 
         var logger =
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger>();
+
+        if (!provider.ValidateAndCleanConfig(logger))
+        {
+            logger.LogError("配置验证失败，终止运行。");
+            goto Exit;
+        }
 
         AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs args) =>
         {
@@ -123,16 +126,12 @@ public sealed class Program
         Console.ReadKey();
     }
 
-    private static bool ConfigureServices(
+    private static void ConfigureServices(
         Microsoft.Extensions.Logging.ILogger log,
         IServiceCollection services)
     {
-        if (!services.AddWoWProcess(log))
-            return false;
-
+        services.AddWoWProcess();
         services.AddCoreBase();
         services.AddCoreNormal(log);
-
-        return true;
     }
 }
